@@ -58,3 +58,58 @@ impl PayloadSize {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_usize_accepts_max() {
+        let size =
+            PayloadSize::from_usize(PayloadSize::MAX as usize).expect("max must be accepted");
+
+        assert_eq!(size.get(), PayloadSize::MAX);
+    }
+
+    #[test]
+    fn from_usize_rejects_over_max() {
+        let over = PayloadSize::MAX as usize + 1;
+
+        assert!(matches!(
+            PayloadSize::from_usize(over),
+            Err(EncodeError::FrameTooLarge { size, max })
+                if size == over && max == PayloadSize::MAX
+        ));
+    }
+
+    #[test]
+    fn from_usize_rejects_values_above_u32() {
+        // On 64-bit targets usize::MAX does not fit in u32, so this fails in the
+        // conversion; on 32-bit it already exceeds the cap. Same error either way.
+        let huge = usize::MAX;
+
+        assert!(matches!(
+            PayloadSize::from_usize(huge),
+            Err(EncodeError::FrameTooLarge { size, max })
+                if size == huge && max == PayloadSize::MAX
+        ));
+    }
+
+    #[test]
+    fn from_wire_rejects_over_max() {
+        let over = PayloadSize::MAX + 1;
+
+        assert!(matches!(
+            PayloadSize::from_wire(over),
+            Err(DecodeError::FrameTooLarge { size, max })
+                if size == over && max == PayloadSize::MAX
+        ));
+    }
+
+    #[test]
+    fn as_usize_roundtrips() {
+        assert_eq!(PayloadSize::ZERO.as_usize(), 0);
+
+        let max = PayloadSize::from_usize(PayloadSize::MAX as usize).expect("max must parse");
+        assert_eq!(max.as_usize(), PayloadSize::MAX as usize);
+    }
+}
