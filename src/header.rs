@@ -1,4 +1,4 @@
-use crate::error::DecodeError;
+use crate::{error::DecodeError, size::PayloadSize};
 
 pub const MAGIC: [u8; 4] = *b"ZUMA";
 pub const HEADER_SIZE: usize = 12;
@@ -36,14 +36,30 @@ impl TryFrom<u8> for MessageType {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Header {
-    pub magic: [u8; 4],
-    pub version: u8,
-    pub message_type: MessageType,
-    pub flags: u16,
-    pub payload_size: u32,
+    pub(crate) magic: [u8; 4],
+    pub(crate) version: u8,
+    pub(crate) message_type: MessageType,
+    pub(crate) flags: u16,
+    pub(crate) payload_size: PayloadSize,
 }
 
 impl Header {
+    pub fn version(&self) -> u8 {
+        self.version
+    }
+
+    pub fn message_type(&self) -> MessageType {
+        self.message_type
+    }
+
+    pub fn flags(&self) -> u16 {
+        self.flags
+    }
+
+    pub fn payload_size(&self) -> PayloadSize {
+        self.payload_size
+    }
+
     pub fn is_compressed(&self) -> bool {
         (self.flags & FLAG_COMPRESSED) != 0
     }

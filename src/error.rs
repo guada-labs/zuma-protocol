@@ -18,6 +18,10 @@ pub enum DecodeError {
 
 #[derive(Error, Debug)]
 pub enum EncodeError {
+    #[error("frame payload too large: {size} bytes exceeds maximum limit of {max} bytes")]
+    FrameTooLarge { size: usize, max: u32 },
+    #[error("header declares {declared} payload bytes but the payload holds {actual}")]
+    PayloadSizeMismatch { declared: u32, actual: usize },
     #[error("unknown encode error")]
     Unknown,
 }
